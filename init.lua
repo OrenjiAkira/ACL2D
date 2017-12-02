@@ -53,10 +53,11 @@ function ACL2D.loadMap(tiles, width, height)
   end
 
   _map = {
-    tiles = tiles,
-    width = width,
+    tiles  = tiles,
+    width  = width,
     height = height,
-    bodies = {},
+    layers = {},
+    ids    = {},
   }
 
   -- returns map because, may you want to draw its geometry?
@@ -71,44 +72,63 @@ end
 --   > if it's `circle`, it has `geom.radius` (number)
 --   > if it's `rectangle`, it has `geom.width` and `geom.height` (numbers)
 --     (note: x, y refer to the center of the geom)
-function ACL2D.loadBody(id, x, y, shape, geom, solid)
+-- solid defines how collision will go down
+-- if it's set to false or 0, it won't push back other bodies
+-- if it's not set (nil), it defaults to 1
+-- solid value zero means the body will be 'immaterial' and
+-- will go through other bodies (it will still trigger collision);
+-- solid values otherwise make bodies push each other, along with triggering
+-- collisions. a bigger solid value will make other bodies with smaller
+-- solid values be pushed back, but not vice-versa (higher values of solid
+-- makes a body 'immovable' by smaller-solid-value bodies)
+
+local _err_invalid_id = "Invlid ID type. Must be string."
+local _err_taken_id = "ID already taken: %s"
+local _err_invalid_solid = "Invalid value for 'solid' argument. Use number."
+local _err_invalid_layer = "Invalid layer type. Must be string."
+local _err_invalid_shape = "Invalid shape (not) specified: %s"
+local _err_insufficient_geom = [=[
+Insuficient geometry information!
+Please provide either a radius or dimensions.]=]
+
+function ACL2D.loadBody(id, data, x, y)
   assert(ACL2D.isMapLoaded())
-  assert(type(id):match('string'), "Invlid ID type. Must be string.")
-  assert(not _map.bodies[id], ("ID already taken: %s"):format(id))
+  assert(type(id):match('string'), _err_invalid_id)
+  assert(not _map.ids[id], _err_taken_id:format(id))
+  assert(tonumber(data.solid or 1), _err_invalid_solid)
+  assert(type(data.layer or 'L1'):match('string'), _err_invalid_layer)
+  assert(CONSTS.SHAPES[data.shape], _err_invalid_shape:format(data.shape))
+  assert((data.geom.width and data.geom.height)
+         or data.geom.radius, _err_insufficient_geom)
 
-  -- solid defines how collision will go down
-  -- if it's set to false or 0, it won't push back other bodies
-  -- if it's not set (nil), it defaults to 1
-  -- solid value zero means the body will be 'immaterial' and
-  -- will go through other bodies (it will still trigger collision);
-  -- solid values otherwise make bodies push each other, along with triggering
-  -- collisions. a bigger solid value will make other bodies with smaller
-  -- solid values be pushed back, but not vice-versa (higher values of solid
-  -- makes a body 'immovable' by smaller-solid-value bodies)
-  solid = (solid == false and 0) or (solid or 1)
-  assert(type(solid):match('number') and solid >= 0,
-         "Invalid value for 'solid' argument. Use false or positive number."
-  )
-
-  assert((geom.width and geom.height) or geom.radius,
-         "Insuficient geometry information! \n" ..
-         "Please provide either a radius or dimensions")
-  geom.width  = geom.width  or geom.radius * 2
-  geom.height = geom.height or geom.radius * 2
-  geom.radius = geom.radius or (geom.width + geom.height) / 2
+  local solid = tonumber(data.solid or 1)
+  local layer = data.layer
+  local masks = data.masks or { layer }
+  local shape = CONSTS.SHAPES[data.shape]
+  local geomdata = data.geom
+  local geom = {}
+  geom.width  = geomdata.width  or geomdata.radius * 2
+  geom.height = geomdata.height or geomdata.radius * 2
+  geom.radius = geomdata.radius or (geomdata.width + geomdata.height) / 2
+  x = x or -8000
+  y = y or -8000
 
   -- mount body table
   local body =  {
-    id         = id,
-    pos        = Vec2(x, y),
-    movement   = Vec2(0, 0),
-    shape      = CONSTS.SHAPES[shape],
-    geom       = geom,
-    solid      = solid,
+    id       = id,
+    pos      = Vec2(x, y),
+    movement = CONSTS.NULLVEC,
+    shape    = shape,
+    geom     = geom,
+    solid    = solid,
+    layer    = layer,
+    masks    = masks,
   }
 
   -- add body to map
-  _map.bodies[id] = body
+  local layer_container = _map.layers[layer] or {}
+  layer_container[id] = body
+  _map.layers[layer] = layer_container
 
   -- return handle
   return body
@@ -116,25 +136,25 @@ end
 
 
 -- get body by id
-function ACL2D.getBody(id)
+function ACL2D.getBody(id, layer)
   assert(ACL2D.isMapLoaded())
-  return _map.bodies[id]
+  if layer and _map.layers[layer] then return _map.layers[layer][id] end
+  for lname, bodies in pairs(_map.layers) do
+    if bodies[id] then return bodies[id] end
+  end
 end
 
 
 -- remove body by id
-function ACL2D.removeBody(id)
+function ACL2D.removeBody(id, layer)
   assert(ACL2D.isMapLoaded())
   assert(type(id):match('string'), "Invalid body id to remove.")
-  _map.bodies[id] = nil
+  if _map.layers[layer] then _map.layers[layer][id] = nil; return end
+  for lname, bodies in pairs(_map.layers) do
+    if bodies[id] then bodies[id] = nil; return end
+  end
 end
 
-
--- iterate through bodies (to deal with collision?)
-function ACL2D.iterateBodies()
-  assert(ACL2D.isMapLoaded())
-  return pairs(_map.bodies)
-end
 
 -- update method
 -- you should call this and let things resolve themselves
@@ -144,18 +164,20 @@ function ACL2D.update(dt)
   if not ACL2D.isMapLoaded() then return end
 
   -- now we iterate bodies. It's O(n^2), not much you can do about it.
-  for id,body in pairs(_map.bodies) do
-    local pos = body.pos
-    -- to move a body, you set its movement value
-    -- don't multiply dt to it, let the physics handle it
-    body.movement = body.movement * dt
+  for lname, layer in pairs(_map.layers) do
+    for id, body in pairs(layer) do
+      local pos = body.pos
+      -- to move a body, you set its movement value
+      -- don't multiply dt to it, let the physics handle it
+      body.movement = body.movement * dt
 
-    -- collision
-    COLLISION.resolveBodies(body, _map.bodies)
-    if not body.movement:is_zero() then
-      body.movement = _speedlimit(body.movement)
-      COLLISION.resolveTiles(body, _map.tiles)
-      body.pos = body.pos + body.movement
+      -- collision
+      COLLISION.resolveBodies(body, _map.layers)
+      if not body.movement:is_zero() then
+        body.movement = _speedlimit(body.movement)
+        COLLISION.resolveTiles(body, _map.tiles)
+        body.pos = body.pos + body.movement
+      end
     end
   end
 end
