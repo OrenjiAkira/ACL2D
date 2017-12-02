@@ -9,7 +9,7 @@ Bodies can be either rectangles or circles.
 
 Please note that this is for simple top-down adventure games.
 Too many _moving bodies_ can result in performance issues.
-I didn't use any complex algorythms to make it more efficient
+I didn't use any complex algorithms to make it more efficient
 because simply there is no need. Also because I wanted to allow
 bodies of different dimensions to work, so I couldn't separate them
 in tile-based grids.
