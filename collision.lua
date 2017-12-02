@@ -66,7 +66,7 @@ end
 
 -- dealing with solid collision between bodies
 local function _solidCollision(body, other)
-  local repulsion = (body.pos + body.movement - other.pos)
+  local repulsion = (body.pos - other.pos)
   local normal = repulsion:normalize()
   local distsqr = repulsion:len2()
 
@@ -189,15 +189,20 @@ end
 
 -- collide one body with all the others
 -- O(n^2), unfortunately still very innefficient
-function collision.resolveBodies(body, bodies)
-  local a = _pack(body, true)
-  for other_id, other in pairs(bodies) do
-    local b = _pack(other, false)
-    if _getBodyChecker(a, b)(a, b) then
-      if body.solid > 0 and other.solid > 0 then
-        _solidCollision(body, other)
+function collision.resolveBodies(body, layers)
+  local body_id = body.id
+  local a = _pack(body, false)
+  for _,lname in ipairs(body.masks) do
+    for other_id, other in pairs(layers[lname]) do
+      if body ~= other then
+        local b = _pack(other, false)
+        if _getBodyChecker(a, b)(a, b) then
+          if body.solid > 0 and other.solid > 0 then
+            _solidCollision(body, other)
+          end
+          _collisions:push({body.id, other_id})
+        end
       end
-      _collisions:push({body.id, other_id})
     end
   end
 end
