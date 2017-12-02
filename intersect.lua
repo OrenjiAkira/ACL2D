@@ -1,7 +1,7 @@
 
 local Vec2      = require 'cpml' .vec2
 local INTERSECT = require 'cpml' .intersect
-local CONSTS    = require 'ACL2D.constants'
+local CONSTS    = require 'acl2d.constants'
 
 local max = math.max
 local min = math.min

@@ -1,9 +1,9 @@
 
 local Vec2  = require 'cpml' .vec2
-local Queue = require 'ACL2D.queue'
+local Queue = require 'acl2d.queue'
 
-local INTERSECT = require 'ACL2D.intersect'
-local CONSTS    = require 'ACL2D.constants'
+local INTERSECT = require 'acl2d.intersect'
+local CONSTS    = require 'acl2d.constants'
 
 
 -- @LOCAL_HELPER_VARS --

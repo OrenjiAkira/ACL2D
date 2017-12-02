@@ -1,14 +1,14 @@
 
 local Vec2  = require 'cpml' .vec2
 
-local CONSTS    = require 'ACL2D.constants'
-local COLLISION = require 'ACL2D.collision'
+local CONSTS    = require 'acl2d.constants'
+local COLLISION = require 'acl2d.collision'
 
 -- physics module
-local ACL2D = {}
+local acl2d = {}
 
 -- one needs first to load the map before using this physics module
--- load it with the ACL2D.loadMap method
+-- load it with the acl2d.loadMap method
 local _map
 
 -- speedlimit
@@ -23,21 +23,21 @@ end
 -- check if map is loaded
 -- returns true or false
 -- if it's false it returns the error msg as the second value
-function ACL2D.isMapLoaded()
+function acl2d.isMapLoaded()
   return not not _map,
-         not _map and "Map not loaded, load it with `ACL2D.loadMap()` first."
+         not _map and "Map not loaded, load it with `acl2d.loadMap()` first."
                   or nil
 end
 
 -- if you close the map, you lose all data
 -- if you want to save it, you should do it elsewhere
-function ACL2D.closeMap()
+function acl2d.closeMap()
   _map = nil
 end
 
 -- load map first before anything else
 -- tiles is matrix of chars from CONSTS.TILES
-function ACL2D.loadMap(tiles, width, height)
+function acl2d.loadMap(tiles, width, height)
 
   -- check tiles
   for i = 1, height do
@@ -91,8 +91,8 @@ local _err_insufficient_geom = [=[
 Insuficient geometry information!
 Please provide either a radius or dimensions.]=]
 
-function ACL2D.loadBody(id, data, x, y)
-  assert(ACL2D.isMapLoaded())
+function acl2d.loadBody(id, data, x, y)
+  assert(acl2d.isMapLoaded())
   assert(type(id):match('string'), _err_invalid_id)
   assert(not _map.ids[id], _err_taken_id:format(id))
   assert(tonumber(data.solid or 1), _err_invalid_solid)
@@ -136,8 +136,8 @@ end
 
 
 -- get body by id
-function ACL2D.getBody(id, layer)
-  assert(ACL2D.isMapLoaded())
+function acl2d.getBody(id, layer)
+  assert(acl2d.isMapLoaded())
   if layer and _map.layers[layer] then return _map.layers[layer][id] end
   for lname, bodies in pairs(_map.layers) do
     if bodies[id] then return bodies[id] end
@@ -146,8 +146,8 @@ end
 
 
 -- remove body by id
-function ACL2D.removeBody(id, layer)
-  assert(ACL2D.isMapLoaded())
+function acl2d.removeBody(id, layer)
+  assert(acl2d.isMapLoaded())
   assert(type(id):match('string'), "Invalid body id to remove.")
   if _map.layers[layer] then _map.layers[layer][id] = nil; return end
   for lname, bodies in pairs(_map.layers) do
@@ -159,9 +159,9 @@ end
 -- update method
 -- you should call this and let things resolve themselves
 -- before you do, it's important you setup the bodies' movement
-function ACL2D.update(dt)
+function acl2d.update(dt)
   -- must have loaded map
-  if not ACL2D.isMapLoaded() then return end
+  if not acl2d.isMapLoaded() then return end
 
   -- now we iterate bodies. It's O(n^2), not much you can do about it.
   for lname, layer in pairs(_map.layers) do
@@ -183,14 +183,14 @@ function ACL2D.update(dt)
 end
 
 -- flush all collisions
-function ACL2D.flush()
+function acl2d.flush()
   COLLISION.flush()
 end
 
 -- get next collision
-function ACL2D.nextCollision()
+function acl2d.nextCollision()
   return COLLISION.getNext()
 end
 
-return ACL2D
+return acl2d
 
