@@ -1,7 +1,7 @@
 
 return {
   NOGROUP = 'none',
-  REPEL = 4,
+  REPEL = 24,
   EPSILON = 2e-7
 }
 

@@ -20,9 +20,7 @@ end
 
 function World:newBody(x, y, w, h, groupname)
   groupname = groupname or Consts.NOGROUP
-  local group = self.groups[groupname]
-  local body = Body(x, y, w, h, group)
-  body:setGroup(group)
+  local body = Body(x, y, w, h, self.groups[groupname])
   table.insert(self.bodies, body)
   print(("Create body @ (%+.3f, %+.3f) in group '%s'"):format(x, y, groupname))
   return body
@@ -37,14 +35,11 @@ function World:update(dt)
     local aw, ah = body:getDimensions()
     for j = 1 + 1, body_count do
       local another = bodies[j]
-      if body:isCollidingWith(another) then
-        local bx, by = another:getPosition()
-        local bw, bh = another:getDimensions()
-        local sx, sy = Consts.REPEL*(aw + bw), Consts.REPEL*(ah + bh)
-        local dx, dy = ax - bx, ay - by
-        local dist2 = max(Consts.EPSILON, dx * dx + dy * dy)
-        body:move(sx * dx / dist2, sy * dy / dist2)
-        another:move(sx * -dx / dist2, sy * -dy / dist2)
+      local collision = body:getCollisionWith(another)
+      if collision then
+        local dx, dy = unpack(collision.repulsion)
+        body:move(dx, dy)
+        another:move(-dx, -dy)
       end
     end
     body:update(dt)
