@@ -1,33 +1,44 @@
 
 local Base = require 'acl2d.base'
-
 local Body = Base()
-Body.__index = Body
 
 function Body:init(x, y, w, h)
   self.x = x
   self.y = y
-  self.w = w
-  self.h = h
+  self.hw = w/2
+  self.hh = h/2
   self.mx = 0
   self.my = 0
+  self.group = nil
 end
 
 function Body:getPosition() return self.x, self.y end
 
-function Body:getWidth() return self.w end
+function Body:getWidth() return self.hw*2 end
 
-function Body:getHeight() return self.h end
+function Body:getHeight() return self.hh*2 end
 
-function Body:getDimensions() return self.w, self.h end
+function Body:getDimensions() return self.hw*2, self.hh*2 end
 
-function Body:getMin() return self.x, self.y end
+function Body:getMin() return self.x - self.hw, self.y - self.hh end
 
-function Body:getMax() return self.x + self.w, self.y + self.h end
+function Body:getMax() return self.x + self.hw, self.y + self.hh end
+
+function Body:setGroup(group)
+  self.group = group
+end
+
+function Body:getGroup()
+  return self.group
+end
+
+function Body:collidesWithGroup(another)
+  return self.group:collidesWith(another)
+end
 
 function Body:isCollidingWith(another)
-  local a0x, a0y = self.x, self.y
-  local a1x, a1y = a0x + self.w, a0y + self.h
+  local a0x, a0y = self.x - self.hw, self.y - self.hh
+  local a1x, a1y = self.x + self.hw, self.y + self.hh
   local b0x, b0y = another:getMin()
   local b1x, b1y = another:getMax()
   return not (a0x > b1x or b0x > a1x or a0y > b1y or b0y > a1y)
@@ -44,5 +55,5 @@ function Body:move(dx, dy)
   self.my = self.my + dy
 end
 
-return setmetatable({}, Body)
+return Body
 

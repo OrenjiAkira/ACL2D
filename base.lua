@@ -1,24 +1,24 @@
 
-local setmetatable = setmetatable
-local getmetatable = getmetatable
-
 local Base = {}
-Base.__index = Base
 
-function Base:__call(...)
-  local obj = setmetatable({}, self)
+local function instantiate(super, ...)
+  local obj = setmetatable({}, super)
+  super.__call = super.__call or instantiate
   obj.__index = obj
-  self.init(obj, ...)
+  super.init(obj, ...)
   return obj
-end
-
-function Base:super()
-  return getmetatable(self)
 end
 
 function Base:init(...)
   -- abstract initializer
 end
+
+function Base:construct(...)
+  -- abstract *manual* constructor
+end
+
+Base.__index = Base
+Base.__call = instantiate
 
 return setmetatable({}, Base)
 
