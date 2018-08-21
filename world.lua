@@ -35,21 +35,16 @@ function World:update(dt)
     local body = bodies[i]
     local ax, ay = body:getPosition()
     local aw, ah = body:getDimensions()
-    local agroup = body:getGroup()
     for j = 1 + 1, body_count do
       local another = bodies[j]
-      local bgroup = another:getGroup()
-      if agroup:collidesWith(bgroup:getName())
-        or bgroup:collidesWith(agroup:getName()) then
-        if body:isCollidingWith(another) then
-          local bx, by = another:getPosition()
-          local bw, bh = another:getDimensions()
-          local sx, sy = Consts.REPEL*(aw + bw), Consts.REPEL*(ah + bh)
-          local dx, dy = ax - bx, ay - by
-          local dist2 = max(Consts.EPSILON, dx * dx + dy * dy)
-          body:move(sx * dx / dist2, sy * dy / dist2)
-          another:move(sx * -dx / dist2, sy * -dy / dist2)
-        end
+      if body:isCollidingWith(another) then
+        local bx, by = another:getPosition()
+        local bw, bh = another:getDimensions()
+        local sx, sy = Consts.REPEL*(aw + bw), Consts.REPEL*(ah + bh)
+        local dx, dy = ax - bx, ay - by
+        local dist2 = max(Consts.EPSILON, dx * dx + dy * dy)
+        body:move(sx * dx / dist2, sy * dy / dist2)
+        another:move(sx * -dx / dist2, sy * -dy / dist2)
       end
     end
     body:update(dt)
@@ -62,7 +57,7 @@ function World:draw(scale)
   graphics.scale(scale)
   graphics.setLineWidth(2/scale)
   for _,body in ipairs(self.bodies) do
-    local color = body:getGroup():getColor()
+    local color = self.groups[body:getGroup()]:getColor()
     local x, y = body:getMin()
     local w, h = body:getDimensions()
     graphics.setColor(color)

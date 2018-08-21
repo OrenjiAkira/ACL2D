@@ -29,7 +29,7 @@ function Body:setGroup(group)
 end
 
 function Body:getGroup()
-  return self.group
+  return self.group:getName()
 end
 
 function Body:collidesWithGroup(another)
@@ -37,6 +37,10 @@ function Body:collidesWithGroup(another)
 end
 
 function Body:isCollidingWith(another)
+  if not self:collidesWithGroup(another:getGroup())
+  or not another:collidesWithGroup(self:getGroup()) then
+    return false
+  end
   local a0x, a0y = self.x - self.hw, self.y - self.hh
   local a1x, a1y = self.x + self.hw, self.y + self.hh
   local b0x, b0y = another:getMin()
