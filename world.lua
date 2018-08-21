@@ -1,4 +1,3 @@
-local sqrt, max = math.sqrt, math.max
 
 local Consts = require 'acl2d.consts'
 local Base = require 'acl2d.base'
@@ -18,11 +17,19 @@ function World:newGroup(name)
   return group
 end
 
-function World:newBody(x, y, w, h, groupname)
+function World:newRectangularBody(x, y, w, h, groupname)
   groupname = groupname or Consts.NOGROUP
-  local body = Body(x, y, w, h, self.groups[groupname])
+  local body = Body(x, y, Consts.SHAPE_AABB, {w/2, h/2}, self.groups[groupname])
   table.insert(self.bodies, body)
-  print(("Create body @ (%+.3f, %+.3f) in group '%s'"):format(x, y, groupname))
+  print(("Create RectangularBody @ (%+.3f, %+.3f) in group '%s'"):format(x, y, groupname))
+  return body
+end
+
+function World:newCircularBody(x, y, rad, groupname)
+  groupname = groupname or Consts.NOGROUP
+  local body = Body(x, y, Consts.SHAPE_CIRCLE, {rad}, self.groups[groupname])
+  table.insert(self.bodies, body)
+  print(("Create CircularBody @ (%+.3f, %+.3f) in group '%s'"):format(x, y, groupname))
   return body
 end
 
@@ -31,8 +38,6 @@ function World:update(dt)
   local body_count = #bodies
   for i = 1, body_count do
     local body = bodies[i]
-    local ax, ay = body:getPosition()
-    local aw, ah = body:getDimensions()
     for j = 1 + 1, body_count do
       local another = bodies[j]
       local collision = body:getCollisionWith(another)
@@ -52,11 +57,12 @@ function World:draw(scale)
   graphics.scale(scale)
   graphics.setLineWidth(2/scale)
   for _,body in ipairs(self.bodies) do
-    local color = self.groups[body:getGroup()]:getColor()
-    local x, y = body:getMin()
-    local w, h = body:getDimensions()
-    graphics.setColor(color)
-    graphics.rectangle("line", x, y, w, h)
+    graphics.setColor(self.groups[body:getGroup()]:getColor())
+    local x, y = body:getPosition()
+    if body:getType() == Consts.SHAPE_AABB then
+      local hw, hh = body.shape[1], body.shape[2]
+      graphics.rectangle("line", x-hw, y-hh, hw+hw, hh+hh)
+    end
   end
   graphics.pop()
 end
