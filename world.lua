@@ -11,8 +11,8 @@ function World:init()
   self:newGroup(Consts.NOGROUP)
 end
 
-function World:newGroup(name)
-  local group = Group(name)
+function World:newGroup(name, color)
+  local group = Group(name, color)
   self.groups[name] = group
   return group
 end
@@ -62,6 +62,9 @@ function World:draw(scale)
     if body:getType() == Consts.SHAPE_AABB then
       local hw, hh = body.shape[1], body.shape[2]
       graphics.rectangle("line", x-hw, y-hh, hw+hw, hh+hh)
+    elseif body:getType() == Consts.SHAPE_CIRCLE then
+      local rad = body.shape[1]
+      graphics.ellipse("line", x, y, rad, rad)
     end
   end
   graphics.pop()

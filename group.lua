@@ -4,9 +4,9 @@ local Consts = require 'acl2d.consts'
 local Base = require 'acl2d.base'
 local Group = Base()
 
-function Group:init(name)
+function Group:init(name, color)
   self.name = name
-  self.color = {
+  self.color = color or {
     .5+.5*random(),
     .5+.5*random(),
     .5+.5*random()
