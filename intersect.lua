@@ -11,7 +11,7 @@ local function aabb_aabb(a, b)
   local b1x, b1y = bx + bhw, by + bhh
 
   -- if not colliding return nil
-  if not (a0x > b1x or b0x > a1x or a0y > b1y or b0y > a1y) then return end
+  if (a0x > b1x or b0x > a1x or a0y > b1y or b0y > a1y) then return end
 
   local sx = Consts.REPEL*(ahw+ahw+bhw+bhw)
   local sy = Consts.REPEL*(ahh+ahh+bhh+bhh)
