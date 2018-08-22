@@ -5,10 +5,26 @@ local Group = require 'acl2d.group'
 local Body = require 'acl2d.body'
 local World = Base()
 
-function World:init()
+-- width: max width of the world
+-- height: max height of the world
+-- (bodies will be clamped inside the world's dimensions!)
+-- options:
+-- + region_size: should be at least the biggest size a body can be
+function World:init(width, height, options)
+  self.width, self.height = width, height
+  self.region_size = options.region_size or 8
   self.bodies = {}
+  self.regions = {}
   self.groups = {}
   self:newGroup(Consts.NOGROUP)
+end
+
+function World:getWidth() return self.width end
+function World:getHeight() return self.height end
+function World:getDimensions() return self.width, self.height end
+
+function World:getGroup(name)
+  return self.groups[name]
 end
 
 function World:newGroup(name, color)

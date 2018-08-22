@@ -1,3 +1,4 @@
+local min, max = math.min, math.max
 
 local Consts = require 'acl2d.consts'
 local Intersect = require 'acl2d.intersect'
@@ -41,10 +42,14 @@ function Body:getCollisionWith(body)
   )
 end
 
-function Body:update(dt)
+function Body:update(world, dt)
+  local left, right = 0, world:getWidth()
+  local top, bottom = 0, world:getHeight()
   local dx, dy = self.mx * dt, self.my * dt
-  self.x, self.y = self.x + dx, self.y + dy
+  self.x = min(right, max(left, self.x + dx))
+  self.y = min(bottom, max(top, self.y + dy))
   self.mx, self.my = 0, 0
+  -- NOTE: update region here
 end
 
 function Body:move(dx, dy)
