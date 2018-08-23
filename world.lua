@@ -149,18 +149,20 @@ function World:update(dt)
 end
 
 function World:draw(scale)
+  -- THIS IS FOR DEBUGGING ONLY.
+  -- *NOT OPTIMISED DUE TO REPETITIVE DRAW CALLS*
   local graphics = love.graphics
   local rsize = self.rsize
   graphics.push()
   graphics.scale(scale)
   graphics.setLineWidth(2/scale)
-  graphics.setColor(1, 1, 1, 1)
+  graphics.setColor(1, 1, 1)
   graphics.rectangle("line", 0, 0, self.width, self.height)
   for idx, region in ipairs(self.regions) do
     local i = 1 + floor(idx / self.cols)
     local j = (idx - 1) % self.cols + 1
     graphics.setColor(1, 1, 1, 0.5)
-    graphics.rectangle("line", rsize*(j - 1), rsize*(i - 1), rsize, rsize)
+    graphics.rectangle("line", rsize * (j - 1), rsize * (i - 1), rsize, rsize)
     for groupname, bodies in pairs(region) do
       for _,body in ipairs(bodies) do
         graphics.setColor(self.groups[body:getGroup()]:getColor())
