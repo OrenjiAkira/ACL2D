@@ -34,5 +34,9 @@ function Group:collidesWith(group)
   return self.mask[group]
 end
 
+function Group:eachCollidingGroup()
+  return pairs(self.mask)
+end
+
 return Group
 

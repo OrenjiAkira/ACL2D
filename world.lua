@@ -14,6 +14,23 @@ local defaults = {
   region_size = 4,
 }
 
+local function getRegion(x, y, rsize, cols)
+  local i, j = 1 + floor(y / rsize), 1 + floor(x / rsize)
+  return j + (i - 1) * cols
+end
+
+local function addBodyToWorld(world, x, y, shapetype, shapeinfo, groupname)
+  x = max(0, min(world:getWidth() - EPSILON, x))
+  y = max(0, min(world:getHeight() - EPSILON, y))
+  groupname = groupname or NOGROUP
+  local body = Body(x, y, shapetype, shapeinfo, world:getGroup(groupname))
+  local idx = getRegion(x, y, world.rsize, world.cols)
+  world.bodies[body] = true
+  table.insert(world.regions[idx][groupname], body)
+  print(strf("New Body @ (%+.3f, %+.3f) in group '%s'", x, y, groupname))
+  return body
+end
+
 -- width: max width of the world in arbitrary units
 -- height: max height of the world in arbitrary units
 -- (bodies will be clamped inside the world's dimensions!)
@@ -37,6 +54,7 @@ function World:init(width, height, options)
   end
 
   -- generate new group
+  self.bodies = {}
   self.groups = {}
   self:newGroup(NOGROUP)
 end
@@ -49,11 +67,6 @@ function World:getGroup(name)
   return self.groups[name]
 end
 
-local function getDesiredRegion(x, y, rsize, cols)
-  local i, j = 1 + floor(y / rsize), 1 + floor(x / rsize)
-  return j + (i - 1) * cols
-end
-
 function World:updateRegionDistribution()
   local regions, rsize, cols = self.regions, self.rsize, self.cols
   for idx, region in ipairs(regions) do
@@ -63,7 +76,7 @@ function World:updateRegionDistribution()
       for n = 1, #bodies do
         local body = bodies[n]
         local x, y = body:getPosition()
-        local newidx = getDesiredRegion(x, y, rsize, cols)
+        local newidx = getRegion(x, y, rsize, cols)
         if newidx == idx then
           newsize = newsize + 1
           bodies[newsize] = body
@@ -91,59 +104,65 @@ function World:newGroup(name, color)
 end
 
 function World:newRectangularBody(x, y, w, h, groupname)
-  groupname = groupname or NOGROUP
-  x = max(0, min(self.width - EPSILON, x))
-  y = max(0, min(self.height - EPSILON, y))
-  local body = Body(x, y, SHAPE_AABB, {w/2, h/2}, self.groups[groupname])
-  local idx = getDesiredRegion(x, y, self.rsize, self.cols)
-  table.insert(self.regions[idx][groupname], body)
-  print(strf("New AABB @ (%+.3f, %+.3f) in group '%s'", x, y, groupname))
-  return body
+  return addBodyToWorld(self, x, y, SHAPE_AABB, {w/2, h/2}, groupname)
 end
 
 function World:newCircularBody(x, y, rad, groupname)
-  groupname = groupname or NOGROUP
-  x = max(0, min(self.width - EPSILON, x))
-  y = max(0, min(self.height - EPSILON, y))
-  local body = Body(x, y, SHAPE_CIRCLE, {rad}, self.groups[groupname])
-  local idx = getDesiredRegion(x, y, self.rsize, self.cols)
-  table.insert(self.regions[idx][groupname], body)
-  print(strf("New Circle @ (%+.3f, %+.3f) in group '%s'", x, y, groupname))
-  return body
+  return addBodyToWorld(self, x, y, SHAPE_CIRCLE, {rad}, groupname)
+end
+
+function World:removeBody(body)
+  local x, y = body:getPosition()
+  local idx = getRegion(x, y, self.rsize, self.cols)
+  local bodies = self.regions[idx][body:getGroup()]
+  local k = 0
+  for i,another in ipairs(bodies) do
+    if body == another then
+      k = i
+      break
+    end
+  end
+  table.remove(bodies, k)
+  self.bodies[body] = nil
 end
 
 function World:update(dt)
   local regions = self.regions
-  local cols = self.cols
-  for idx, region in ipairs(self.regions) do
+  local rsize, cols = self.rsize, self.cols
+  for body in pairs(self.bodies) do
+    local group = self.groups[body:getGroup()]
+    local x, y = body:getPosition()
+    local idx = getRegion(x, y, rsize, cols)
     local neighbours = {
-      regions[idx],
-      regions[idx + 1],
-      regions[idx + 1 - cols],
-      regions[idx + cols],
-      regions[idx + 1 + cols],
+      regions[idx - 1       ], -- left
+      regions[idx           ], -- same
+      regions[idx + 1       ], -- right
+      regions[idx - 1 - cols], -- top-left
+      regions[idx     - cols], -- top
+      regions[idx + 1 - cols], -- top-right
+      regions[idx + 1 + cols], -- bottom-left
+      regions[idx     + cols], -- bottom
+      regions[idx - 1 + cols], -- bottom-right
     }
-    for groupname, bodies in pairs(region) do
-      for _,body in ipairs(bodies) do
-        for k = 1, 5 do
-          local neighbour = neighbours[k]
-          if neighbour then
-            for _,another in ipairs(neighbour[groupname]) do
-              if body ~= another then
-                local collision = body:getCollisionWith(another)
-                if collision then
-                  local dx, dy = unpack(collision.repulsion)
-                  body:move(dx, dy)
-                  another:move(-dx, -dy)
-                end
+    for k = 1, 9 do
+      local region = neighbours[k]
+      if region then
+        for groupname in group:eachCollidingGroup() do
+          for _,another in ipairs(region[groupname]) do
+            if body ~= another then
+              local collision = body:getCollisionWith(another)
+              if collision then
+                local dx, dy = unpack(collision.repulsion)
+                body:move(dx, dy)
+                another:move(-dx, -dy)
               end
             end
           end
         end
-        body:update(dt)
-        body:clamp(0, 0, self.width, self.height)
       end
     end
+    body:update(dt)
+    body:clamp(0, 0, self.width, self.height)
   end
   self:updateRegionDistribution()
 end

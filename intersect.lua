@@ -1,4 +1,5 @@
-local unpack, sqrt, max, min = unpack, math.sqrt, math.max, math.min
+local sqrt, max, min, abs = math.sqrt, math.max, math.min, math.abs
+local unpack = unpack
 
 local Consts = require 'acl2d.consts'
 
