@@ -42,12 +42,10 @@ function Body:getCollisionWith(body)
   )
 end
 
-function Body:update(world, dt)
-  local left, right = 0, world:getWidth()
-  local top, bottom = 0, world:getHeight()
+function Body:update(dt)
   local dx, dy = self.mx * dt, self.my * dt
-  self.x = min(right, max(left, self.x + dx))
-  self.y = min(bottom, max(top, self.y + dy))
+  self.x = self.x + dx
+  self.y = self.y + dy
   self.mx, self.my = 0, 0
   -- NOTE: update region here
 end

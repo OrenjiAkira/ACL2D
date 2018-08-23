@@ -1,3 +1,4 @@
+local ceil = math.ceil
 
 local Consts = require 'acl2d.consts'
 local Base = require 'acl2d.base'
@@ -5,17 +6,35 @@ local Group = require 'acl2d.group'
 local Body = require 'acl2d.body'
 local World = Base()
 
--- width: max width of the world
--- height: max height of the world
+local defaults = {
+  region_size = 4,
+}
+
+-- width: max width of the world in arbitrary units
+-- height: max height of the world in arbitrary units
 -- (bodies will be clamped inside the world's dimensions!)
 -- options:
--- + region_size: should be at least the biggest size a body can be
+-- + region_size: square side size of a region in arbitrary units
 function World:init(width, height, options)
-  self.width, self.height = width, height
-  self.region_size = options.region_size or 8
-  self.bodies = {}
+  assert(width and height, "Must receive 'width' & 'height' arguments!")
+  local options = options or {}
+  local region_size = options.region_size or defaults.region_size
   self.regions = {}
+  self.width, self.height = width, height
+  self.cols = ceil(width / region_size)
+  self.rows = ceil(height / region_size)
+  self.rsize = region_size
+
+  -- generate regions
+  for idx = 1, ceil(self.cols * self.rows) do
+    self.regions[idx] = {
+      [Consts.NOGROUP] = {}
+    }
+  end
+
+  -- generate new group
   self.groups = {}
+  self.bodies = {}
   self:newGroup(Consts.NOGROUP)
 end
 
