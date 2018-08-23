@@ -37,7 +37,7 @@ function World:newRectangularBody(x, y, w, h, groupname)
   groupname = groupname or Consts.NOGROUP
   local body = Body(x, y, Consts.SHAPE_AABB, {w/2, h/2}, self.groups[groupname])
   table.insert(self.bodies, body)
-  print(("Create RectangularBody @ (%+.3f, %+.3f) in group '%s'"):format(x, y, groupname))
+  print(("New AABB @ (%+.3f, %+.3f) in group '%s'"):format(x, y, groupname))
   return body
 end
 
@@ -45,7 +45,7 @@ function World:newCircularBody(x, y, rad, groupname)
   groupname = groupname or Consts.NOGROUP
   local body = Body(x, y, Consts.SHAPE_CIRCLE, {rad}, self.groups[groupname])
   table.insert(self.bodies, body)
-  print(("Create CircularBody @ (%+.3f, %+.3f) in group '%s'"):format(x, y, groupname))
+  print(("New Circle @ (%+.3f, %+.3f) in group '%s'"):format(x, y, groupname))
   return body
 end
 
