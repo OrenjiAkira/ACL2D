@@ -32,10 +32,6 @@ function Body:collidesWithGroup(groupname)
 end
 
 function Body:getCollisionWith(body)
-  if not self:collidesWithGroup(body:getGroup())
-  or not body:collidesWithGroup(self:getGroup()) then
-    return
-  end
   return Intersect[self.type][body.type](
     { self.x, self.y, unpack(self.shape) },
     { body.x, body.y, unpack(body.shape) }
@@ -47,7 +43,11 @@ function Body:update(dt)
   self.x = self.x + dx
   self.y = self.y + dy
   self.mx, self.my = 0, 0
-  -- NOTE: update region here
+end
+
+function Body:clamp(left, top, right, bottom)
+  self.x = max(left, min(right - Consts.EPSILON, self.x))
+  self.y = max(top, min(bottom - Consts.EPSILON, self.y))
 end
 
 function Body:move(dx, dy)
