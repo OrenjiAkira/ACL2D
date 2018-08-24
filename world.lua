@@ -2,13 +2,13 @@ local strf = string.format
 local min, max = math.min, math.max
 local ceil, floor = math.ceil, math.floor
 
-local Consts = require 'acl2d.consts'
 local Base = require 'acl2d.base'
-local Group = require 'acl2d.group'
 local Body = require 'acl2d.body'
-local World = Base()
+local Consts = require 'acl2d.consts'
+local Group = require 'acl2d.group'
+local Intersect = require 'acl2d.intersect'
 
-setfenv(1, Consts)
+local World = Base()
 
 local defaults = {
   region_size = 4,
@@ -40,6 +40,8 @@ function World:init(width, height, options)
   assert(width and height, "Must receive 'width' & 'height' arguments!")
   local options = options or {}
   local region_size = options.region_size or defaults.region_size
+  self.consts = Consts(options.scale or 1)
+  self.intersect = Intersect(self)
   self.regions = {}
   self.width, self.height = width, height
   self.cols = ceil(width / region_size)
