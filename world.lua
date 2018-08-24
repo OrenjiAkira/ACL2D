@@ -23,7 +23,7 @@ local function addBodyToWorld(world, x, y, shapetype, shapeinfo, groupname)
   x = max(0, min(world:getWidth() - EPSILON, x))
   y = max(0, min(world:getHeight() - EPSILON, y))
   groupname = groupname or NOGROUP
-  local body = Body(x, y, shapetype, shapeinfo, world:getGroup(groupname))
+  local body = Body(world, x, y, shapetype, shapeinfo, world:getGroup(groupname))
   local idx = getRegion(x, y, world.rsize, world.cols)
   world.bodies[body] = true
   table.insert(world.regions[idx][groupname], body)

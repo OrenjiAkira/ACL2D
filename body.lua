@@ -5,7 +5,8 @@ local Intersect = require 'acl2d.intersect'
 local Base = require 'acl2d.base'
 local Body = Base()
 
-function Body:init(x, y, type, shape, group)
+function Body:init(world, x, y, type, shape, group)
+  self.world = world
   self.type = type
   self.x = x
   self.y = y
@@ -51,8 +52,8 @@ function Body:clamp(left, top, right, bottom)
 end
 
 function Body:move(dx, dy)
-  self.mx = self.mx + dx
-  self.my = self.my + dy
+  self.mx = dx
+  self.my = dy
 end
 
 return Body
