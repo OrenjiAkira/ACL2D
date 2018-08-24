@@ -15,7 +15,7 @@ local function aabb_aabb(a, b)
   if (a0x > b1x or b0x > a1x or a0y > b1y or b0y > a1y) then return end
 
   local sx = Consts.REPEL*(ahw+ahw+bhw+bhw)
-  local sy = max(sx, Consts.REPEL*(ahh+ahh+bhh+bhh))
+  local sy = Consts.REPEL*(ahh+ahh+bhh+bhh)
 
   local dx, dy = ax - bx, ay - by
   local dist2 = max(Consts.EPSILON, dx * dx + dy * dy)
@@ -43,7 +43,7 @@ local function aabb_circle(a, c)
   dist2 = max(Consts.EPSILON, (ax-cx) * (ax-cx) + (ay-cy) * (ay-cy))
 
   local sx = Consts.REPEL*(ahw+ahw+rad+rad)
-  local sy = max(sx, Consts.REPEL*(ahh+ahh+rad+rad))
+  local sy = Consts.REPEL*(ahh+ahh+rad+rad)
   local dist = sqrt(dist2)
   return {
     repulsion = {

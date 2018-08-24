@@ -3,7 +3,7 @@ local Base = {}
 
 local function instantiate(super, ...)
   local obj = setmetatable({}, super)
-  super.__call = super.__call or instantiate
+  obj.__call = obj.__call or instantiate
   obj.__index = obj
   super.init(obj, ...)
   return obj
@@ -20,5 +20,5 @@ end
 Base.__index = Base
 Base.__call = instantiate
 
-return setmetatable({}, Base)
+return instantiate(Base)
 
