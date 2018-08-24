@@ -17,9 +17,25 @@ local function aabb_aabb(a, b)
   local sx = Consts.REPEL*(ahw+ahw+bhw+bhw)
   local sy = Consts.REPEL*(ahh+ahh+bhh+bhh)
 
-  local dx, dy = ax - bx, ay - by
+  local dx = abs(ax - bx) - (ahw + bhw)
+  local dy = abs(ay - by) - 1
+
   local dist2 = max(Consts.EPSILON, dx * dx + dy * dy)
   local dist = sqrt(dist2)
+
+  --[[
+
+  dx = abs(x1 - x2) - (hw1 + hw2)/2
+  dy = abs(y1 - y2) - (hh1 + hh2)/2
+
+  collisao <=> dx < 0 && dy < 0
+  M = 0.1 da unidade?
+
+  d = min(abs(dx), abs(dy))
+  K * 1 / max(EPSILON, M - d)^2
+
+  --]]
+
   return {
     repulsion = {
       sx * dx / dist / dist2,
