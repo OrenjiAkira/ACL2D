@@ -6,40 +6,22 @@ local Consts = require 'acl2d.consts'
 local function aabb_aabb(a, b)
   local ax, ay, ahw, ahh = unpack(a)
   local bx, by, bhw, bhh = unpack(b)
-  local a0x, a0y = ax - ahw, ay - ahh
-  local a1x, a1y = ax + ahw, ay + ahh
-  local b0x, b0y = bx - bhw, by - bhh
-  local b1x, b1y = bx + bhw, by + bhh
-
-  -- if not colliding return nil
-  if (a0x > b1x or b0x > a1x or a0y > b1y or b0y > a1y) then return end
-
-  local sx = Consts.REPEL*(ahw+ahw+bhw+bhw)
-  local sy = Consts.REPEL*(ahh+ahh+bhh+bhh)
 
   local dx = abs(ax - bx) - (ahw + bhw)
-  local dy = abs(ay - by) - 1
+  local dy = abs(ay - by) - (ahh + bhh)
 
-  local dist2 = max(Consts.EPSILON, dx * dx + dy * dy)
-  local dist = sqrt(dist2)
+  if dx > 0 or dy > 0 then return end
 
-  --[[
+  local dist = max(Consts.EPSILON, Consts.ELASTICITY - min(abs(dx), abs(dy)))
+  local repulsion = Consts.REPEL/(dist*dist)
 
-  dx = abs(x1 - x2) - (hw1 + hw2)/2
-  dy = abs(y1 - y2) - (hh1 + hh2)/2
-
-  collisao <=> dx < 0 && dy < 0
-  M = 0.1 da unidade?
-
-  d = min(abs(dx), abs(dy))
-  K * 1 / max(EPSILON, M - d)^2
-
-  --]]
+  local vx, vy = ax - bx, ay - by
+  local vlen = (vx*vx + vy*vy) / sqrt(max(Consts.EPSILON, vx*vx + vy*vy))
 
   return {
     repulsion = {
-      sx * dx / dist / dist2,
-      sy * dy / dist / dist2,
+      vx * repulsion / vlen,
+      vy * repulsion / vlen,
     }
   }
 end
@@ -56,15 +38,14 @@ local function aabb_circle(a, c)
 
   if dist2 > rad*rad then return end
 
-  dist2 = max(Consts.EPSILON, (ax-cx) * (ax-cx) + (ay-cy) * (ay-cy))
+  local vlen = sqrt(dist2)
+  local dist = max(Consts.EPSILON, Consts.ELASTICITY - (rad - vlen))
+  local repulsion = Consts.REPEL/(dist*dist)
 
-  local sx = Consts.REPEL*(ahw+ahw+rad+rad)
-  local sy = Consts.REPEL*(ahh+ahh+rad+rad)
-  local dist = sqrt(dist2)
   return {
     repulsion = {
-      sx * dx / dist / dist2,
-      sy * dy / dist / dist2,
+      dx * repulsion / vlen,
+      dy * repulsion / vlen,
     }
   }
 end
@@ -87,14 +68,14 @@ local function circle_circle(c1, c2)
 
   if dist2 > (rad1+rad2)*(rad1+rad2) then return end
 
-  local sx = Consts.REPEL*(rad1+rad1+rad2+rad2)
-  local sy = sx
-  local dist = sqrt(dist2)
+  local vlen = sqrt(dist2)
+  local dist = max(Consts.EPSILON, Consts.ELASTICITY - (rad1 + rad2 - vlen))
+  local repulsion = Consts.REPEL/(dist*dist)
 
   return {
     repulsion = {
-      sx * dx / dist / dist2,
-      sy * dy / dist / dist2,
+      dx * repulsion / vlen,
+      dy * repulsion / vlen,
     }
   }
 end
