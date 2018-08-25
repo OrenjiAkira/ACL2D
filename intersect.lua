@@ -15,13 +15,16 @@ local function aabb_aabb(a, b)
   local dist = max(Consts.EPSILON, Consts.ELASTICITY - min(abs(dx), abs(dy)))
   local repulsion = Consts.REPEL/(dist*dist)
 
+  local sx = ahw + bhw
+  local sy = ahh + bhh
+
   local vx, vy = ax - bx, ay - by
   local vlen = (vx*vx + vy*vy) / sqrt(max(Consts.EPSILON, vx*vx + vy*vy))
 
   return {
     repulsion = {
-      vx * repulsion / vlen,
-      vy * repulsion / vlen,
+      sx*vx * repulsion / vlen,
+      sy*vy * repulsion / vlen,
     }
   }
 end
@@ -38,14 +41,17 @@ local function aabb_circle(a, c)
 
   if dist2 > rad*rad then return end
 
+  local sx = ahw + rad
+  local sy = ahh + rad
+
   local vlen = sqrt(dist2)
   local dist = max(Consts.EPSILON, Consts.ELASTICITY - (rad - vlen))
   local repulsion = Consts.REPEL/(dist*dist)
 
   return {
     repulsion = {
-      dx * repulsion / vlen,
-      dy * repulsion / vlen,
+      sx * dx * repulsion / vlen,
+      sy * dy * repulsion / vlen,
     }
   }
 end
@@ -68,14 +74,16 @@ local function circle_circle(c1, c2)
 
   if dist2 > (rad1+rad2)*(rad1+rad2) then return end
 
+  local scale = rad1 + rad2
+
   local vlen = sqrt(dist2)
   local dist = max(Consts.EPSILON, Consts.ELASTICITY - (rad1 + rad2 - vlen))
   local repulsion = Consts.REPEL/(dist*dist)
 
   return {
     repulsion = {
-      dx * repulsion / vlen,
-      dy * repulsion / vlen,
+      dx * scale * repulsion / vlen,
+      dy * scale * repulsion / vlen,
     }
   }
 end
