@@ -1,11 +1,11 @@
-local min, max = math.min, math.max
+local min, max, sqrt = math.min, math.max, math.sqrt
 
 local Consts = require 'acl2d.consts'
 local Intersect = require 'acl2d.intersect'
 local Base = require 'acl2d.base'
 local Body = Base()
 
-function Body:init(x, y, type, shape, group)
+function Body:init(x, y, type, shape, group, inertia)
   self.type = type
   self.x = x
   self.y = y
@@ -13,6 +13,7 @@ function Body:init(x, y, type, shape, group)
   self.my = 0
   self.shape = shape
   self.group = group
+  self.inertia = sqrt(inertia or 0)
 end
 
 function Body:getPosition() return self.x, self.y end
@@ -42,7 +43,8 @@ function Body:update(dt)
   local dx, dy = self.mx * dt, self.my * dt
   self.x = self.x + dx
   self.y = self.y + dy
-  self.mx, self.my = 0, 0
+  self.mx = (self.mx - dx) * self.inertia
+  self.my = (self.my - dy) * self.inertia
 end
 
 function Body:clamp(left, top, right, bottom)

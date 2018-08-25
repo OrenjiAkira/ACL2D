@@ -19,15 +19,15 @@ local function getRegion(x, y, rsize, cols)
   return j + (i - 1) * cols
 end
 
-local function addBodyToWorld(world, x, y, shapetype, shapeinfo, groupname)
+local function addBodyToWorld(world, x, y, shapetype, shapeinfo, gname, inertia)
   x = max(0, min(world:getWidth() - EPSILON, x))
   y = max(0, min(world:getHeight() - EPSILON, y))
-  groupname = groupname or NOGROUP
-  local body = Body(x, y, shapetype, shapeinfo, world:getGroup(groupname))
+  gname = gname or NOGROUP
+  local body = Body(x, y, shapetype, shapeinfo, world:getGroup(gname), inertia)
   local idx = getRegion(x, y, world.rsize, world.cols)
   world.bodies[body] = true
-  table.insert(world.regions[idx][groupname], body)
-  print(strf("New Body @ (%+.3f, %+.3f) in group '%s'", x, y, groupname))
+  table.insert(world.regions[idx][gname], body)
+  print(strf("New Body @ (%+.3f, %+.3f) in group '%s'", x, y, gname))
   return body
 end
 
@@ -103,12 +103,12 @@ function World:newGroup(name, color)
   return group
 end
 
-function World:newRectangularBody(x, y, w, h, groupname)
-  return addBodyToWorld(self, x, y, SHAPE_AABB, {w/2, h/2}, groupname)
+function World:newRectangularBody(x, y, w, h, groupname, inertia)
+  return addBodyToWorld(self, x, y, SHAPE_AABB, {w/2, h/2}, groupname, inertia)
 end
 
-function World:newCircularBody(x, y, rad, groupname)
-  return addBodyToWorld(self, x, y, SHAPE_CIRCLE, {rad}, groupname)
+function World:newCircularBody(x, y, rad, groupname, inertia)
+  return addBodyToWorld(self, x, y, SHAPE_CIRCLE, {rad}, groupname, inertia)
 end
 
 function World:removeBody(body)
