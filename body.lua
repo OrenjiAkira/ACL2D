@@ -20,16 +20,16 @@ function Body:getPosition() return self.x, self.y end
 
 function Body:getType() return self.type end
 
+function Body:setInertia(n)
+  self.inertia = max(0, min(1, n))
+end
+
 function Body:setGroup(group)
   self.group = group
 end
 
 function Body:getGroup()
-  return self.group:getName()
-end
-
-function Body:collidesWithGroup(groupname)
-  return self.group:collidesWith(groupname)
+  return self.group
 end
 
 function Body:getCollisionWith(body)
